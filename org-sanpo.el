@@ -129,14 +129,13 @@
 ;; TODO: 見出しが visual-line-mode で改行する際に汚ないことに
 ;; NOTE: widen された時点で indirect-buffer を消して基底buffer に切り替えたほうがいいかも。
 ;; org-narrow-to-subtree 自体がそのような方法を備えているかも
-;; NOTE: 何故か org-capture buffer だと headline-face の取得に失敗する
-;; 回避として org-level-1 に failback している。
 
 (defun org-sanpo--setup-headline-buffer ()
   (save-excursion
     (goto-char (point-min))
-    (let ((headline-face (get-text-property (point) 'face)))
-      (face-remap-add-relative (or headline-face 'org-level-1) :height 150))
+    (let* ((level (org-current-level))
+           (headline-face (intern (format "org-level-%d" level))))
+      (face-remap-add-relative headline-face :height 150))
     (end-of-line)
     (put-text-property (point) (1+ (point)) 'line-height '(2.0 2.0))))
 
