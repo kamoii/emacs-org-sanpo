@@ -135,8 +135,11 @@
     (goto-char (point-min))
     (let* ((level (org-current-level))
            (headline-face (intern (format "org-level-%d" level))))
+      ;; 残念ながら行末の tag も大きくなる。
       (face-remap-add-relative headline-face :height 150))
     (end-of-line)
+    ;; text-property は基底バッファにも影響を与える。
+    ;; そのため overlay (indirect-buffer 個別) に切り替えたほうが良い
     (put-text-property (point) (1+ (point)) 'line-height '(2.0 2.0))))
 
 (defun org-sanpo--get-or-create-headline-buffer (file id)
