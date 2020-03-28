@@ -361,7 +361,15 @@ returns (vector <mode> <type> <object> <file>)."
 (defun org-sanpo--current-commit (conn)
   "cacheが構築されているコミット。
 コミットツリーに存在いないコミットの可能性がある。"
+  (pcase (emacsql conn [:select [commit index-commit] :from commit])
+    (`((,commit ,index-commit)) (or index-commit commit))
+    (_ (error "Unexpected schema"))))
+
+(defun org-sanpo--current-head-commit (conn)
   (caar (emacsql conn [:select commit :from commit])))
+
+(defun org-sanpo--current-index-commit (conn)
+  (caar (emacsql conn [:select index-commit :from commit])))
 
 (defun org-sanpo--init-cache ()
   "キャッシュDBに接続して `org-sanpo--cache' に設定する。
@@ -386,26 +394,14 @@ returns (vector <mode> <type> <object> <file>)."
   (unless org-sanpo--cache (org-sanpo--init-cache))
   (let* ((head-commit (magit-rev-parse "HEAD"))
          (conn (plist-get org-sanpo--cache :conn)))
-    (unless (string= head-commit (org-sanpo--current-commit conn))
-      (org-sanpo--update-cache-to-commit
-       (plist-get org-sanpo--cache :conn)
-       head-commit))
+    (unless (string= head-commit (org-sanpo--current-head-commit conn))
+      (org-sanpo--update-cache-to-commit conn head-commit))
     conn))
 
 ;; ある hash を元に
 ;; base-commit /= commit かつ commit の祖先に base-commit がいる想定
-;;
-;; $ git diff-tree --name-status <base-commit> <commit>
-;;
-;;         Select only files that are Added (A), Copied (C), Deleted (D),
-;;         Modified (M), Renamed (R), have their type (i.e. regular file,
-;;         symlink, submodule, ...) changed (T), are Unmerged (U), are Unknown
-;;         (X), or have had their pairing Broken (B). Any combination of the
-;;
-;; --find-copies[-harder] や --find-renames を有効にしない限り C/R はなく、
-;; A/D/M のみらしい
 
-(defun org-sanpo--update-cache-to-commit (conn commit)
+(defun org-sanpo--update-cache-to-commit (conn commit &optional is-index-commit)
   "現状効率的な実装になっていない"
   (emacsql-with-transaction conn
     (let* ((current-commit (org-sanpo--current-commit conn))
@@ -424,8 +420,10 @@ returns (vector <mode> <type> <object> <file>)."
       (emacsql conn (vector :delete :from 'files :where `(in file ,(apply 'vector delete-files))))
       ;; modify/add のファイルのみ
       (org-sanpo--insert-org-files conn org-files)
-      (emacsql conn [:delete :from commit])
-      (emacsql conn (vector :insert :into 'commit :values (vector commit))))))
+      (emacsql conn
+               (if is-index-commit
+                   (vector :update 'commit :set `(= index-commit ,commit))
+                 (vector :update 'commit :set `(= commit ,commit) `(= index-commit ,nil)))))))
 
 (defun org-sanpo--create-cache-from-scratch (conn commit)
   "初回の利用時及びscheme の更新があった際に実行される。
@@ -438,7 +436,7 @@ schema-version が設定される。"
       (emacsql conn [:create-table $i1 $S2] table schema))
     (org-sanpo--insert-org-files conn (org-sanpo--org-files-for-commit commit))
     (emacsql conn [:delete :from commit])
-    (emacsql conn (vector :insert :into 'commit :values (vector commit)))
+    (emacsql conn (vector :insert :into 'commit :values (vector commit nil)))
     (emacsql conn (format "PRAGMA user_version = %s" org-sanpo--cache-schema-version))))
 
 (defun org-sanpo--insert-org-files (conn org-files)
@@ -508,8 +506,14 @@ schema-version が設定される。"
 
         ;; キャッシュのcommit
         ;; 一行のみ常に設定されている想定
+        ;; head-commit はコミットツリー上のコミット。常に HEAD と同期する。
+        ;; index-commit は index に追加された内容から先行して作成されるコミット
+        ;; コミットツリー上にはまだ存在していない。
+        ;; コミットしていない内容で cache に入るように。
+        ;; head-commit を更新する際は nil に設定される。
         (commit
-         [(commit text :not-null :primary-key)])))
+         [(commit text :not-null :primary-key)
+          (index-commit text)])))
 
 
 (provide 'org-sanpo)
