@@ -1,0 +1,80 @@
+#+title: Org-Sanpo
+
+*まだ下書き*
+
+headline を note の単位とし、ID を用いたリンク、より robaust なキャッシュを目指したものである。
+Heavly inspired from org-roam and some codes are based off org-roam.
+現状まだ試験段階であり、有用かは分かっていないが、使える状態になっている。
+roam は「歩き回る」という意味らしいので「散歩(sanpo)」である
+
+* TODO How to start
+
+* TODO zattelkesten/roam
+
+理解としてはは従来の category 、tag とも異なる link ベース の note taking。
+個人的に感じていた category, tab ベースの note taking の不満を解消できるかも。
+
+* Motivation
+
+Why not org-roam.
+org-roam は非常に良くできたライブラリである。
+もし今から org-mode の note を構築するのであれば org-roam を薦める。
+ただ既に従来の org の考え方のファイルが大量にある(もしくは フローがある)場合、
+次の二点が問題になってくる。
+
+ * file-as-note のため既存 org-mode エコシステムとの親和性の低い
+ * org-roam の機能を通じて操作しないとキャッシュが壊れる
+
+* Headline-as-Note, Link-by-ID
+
+ * 一度付与した ID は変更しないこと(ただし更新関数を提供することは可能)
+ * ID の形式は org-id が提供する UUID か、一意的であれば独自に振っても問題ない
+   - ただし現状 org-id に ID として認識されるには空白を含めてはいけない
+   - hyperlink や headline の移動に org-id の関数を利用している
+
+org-roam と違い
+
+ * 既に orgファイルの headline にIDを付与すれば note とし扱える
+ * ~org-sanpo-directory~ 以下の orgファイルの、どのレベルの headline でも対象とできる
+ * org-sanpo が提供するコマンド以外でも ID を付与したらリンクを張っても問題ない
+ * ファイル名の変更、移動、headline の refile してもリンクは切れない
+
+* キャッシュ方式(実験的)
+
+方針としては「利用のたびにキャッシュを更新する必要があるか確認する」。
+若干の遅延があるかもしれないが robaust になることが期待できる。
+org-mode の高速 parser があるとより嬉しいのだが... tree-sitter に期待。
+更新も orgファイルの差分で更新は難しいためファイル単位。
+elisp ベースで実装すると遅そうなので git を利用する。
+
+org-roam と同様キャッシュの内容は sqlite3 データベースに格納される。
+キャッシュを更新するべきファイルの検出が難しい。
+実装をシンプルに保つため git を利用している。
+初回ビルドし終わった後は、変更ファイルのみキャッシュを更新する。
+
+~org-sanpo-find-file~, ~org-sanpo-insert-link~ を実行する度にキャッシュを更新する必要があるかを検証する。
+適度にコミットされており、orgファイルが適度な大きさに保たれているならストレスないことを目論んでいる。
+
+限界。
+大きいorgファイルを頻繁に更新すると重い
+保存してない内容についてはキャッシュは更新されない
+
+この方式でストレスなく利用できるかは検証中。
+この方式は実験的であり、より良い方法があれば将来変える可能性ある。
+
+* Org-Roam との他の違い
+
+ * コードはざつ、テスト無し、poorly documented
+ * graph や backlink の自動更新はない
+
+* 依存ライブラリ
+
+ * org-capture
+ * org-id
+   - id の生成、ファイル内の移動など
+   - org-id のキャッシュの仕組みは利用しない
+ * magit
+ * selectrum
+   - これは ivy/helm に変えたほうがいいかも
+ * emacsql
+ * s, f
