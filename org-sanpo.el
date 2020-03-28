@@ -289,11 +289,6 @@ Which means `git gc' will delete this commit object."
 
 ;; * Orgファイルから情報抽出
 
-;; (with-temp-buffer
-;;   (insert-file-contents "~/t/foo.org")
-;;   (org-mode)
-;;   (org-sanpo--extract-links "foo.org"))
-
 (defun org-sanpo--extract-from-file (file &optional object-hash)
   (with-temp-buffer
     (if object-hash
@@ -360,9 +355,6 @@ Which means `git gc' will delete this commit object."
 
 ;; * DBキャッシュ
 
-;; 世代管理はどうする？
-;; 常に cache-db は一つのみという前提でやるか？
-
 ;; NOTE: 際ロード時に備えて defvar ではなくて意図的に setq にしている。
 ;; 際ロードすると `org-sanpo--cache-schema-version' が更新されている可能性があり、
 ;; その際は `org-sanpo--init-cache' を再度走らせる必要があるため。
@@ -398,7 +390,6 @@ Which means `git gc' will delete this commit object."
               (list :conn conn
                     :db-file org-sanpo-cache-db-file))))))
 
-;; 古いcommitのcacheの場合、cache を更新する
 (defun org-sanpo--get-cache ()
   "使える状態のキャッシュを返す。
 キャッシュの形式は :conn,:db-file から成る plist。
@@ -418,9 +409,6 @@ Which means `git gc' will delete this commit object."
         (when org-sanpo-debug (message "[org-sanpo] Update to index commit: %s" index-commit))
         (org-sanpo--update-cache-to-commit conn index-commit t)))
     conn))
-
-;; ある hash を元に
-;; base-commit /= commit かつ commit の祖先に base-commit がいる想定
 
 (defun org-sanpo--update-cache-to-commit (conn commit &optional is-index-commit)
   "現状効率的な実装になっていない"
