@@ -247,6 +247,7 @@ returns (vector <mode> <type> <object> <file>)."
     (_ (error "Unexpected format"))))
 
 ;; -z option を与えた場合 ("A" "a.org" "M" "b.org") のような形式になる
+;; TODO: --name-status 渡さなければ object-hash が得られるようだ
 (defun org-sanpo--git-tree-diff (from-commit to-commit)
   "二つのコミット間のファイルの変化を返す。"
   (--filter (f-ext? (plist-get it :file) "org")
@@ -261,6 +262,11 @@ returns (vector <mode> <type> <object> <file>)."
                 ("D" 'delete)
                 (_ (error "Unexpectd type: %s" (aref str 0))))
         :file (cadr x)))
+
+;; (defun org-sanpo--git-diff-index-quiet (commit)
+;;   "If there is diff return t, otherwise return nil.
+;; Diff mean difference in index/working-tree from commit."
+;;   (magit-git-failure "diff-index" "--quiet" commit))
 
 ;; todo-keyword が取れないな？
 ;; raw-value のほうに入ってしまっているな。。。
