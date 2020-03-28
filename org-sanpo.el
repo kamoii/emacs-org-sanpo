@@ -39,10 +39,10 @@
 ;; * 基本設定
 
 ;; Must be root of git repository too.
-(defvar org-sanpo-directory "/home/sino/org/")
+(defvar org-sanpo-directory (f-full "~/org/"))
 ;; The cache directory deosn't need to be under `org-sanpo-directory'.
 ;; But if it does, you may want to specfiy in `.gitignore'
-(defvar org-sanpo-cache-db-file "/home/sino/org/.org-sanpo/cache.sqlite")
+(defvar org-sanpo-cache-db-file (f-full "~/org/.org-sanpo-cache.sqlite"))
 
 (defvar org-sanpo-debug t)
 
