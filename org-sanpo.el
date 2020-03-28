@@ -220,7 +220,7 @@ FROM headlines h LEFT JOIN tags t ON h.id = t.id
 GROUP BY h.id, h.file, h.title")))
     (-map (pcase-lambda (`(,id ,file ,title ,tags))
             (let ((prefix (s-pad-right 8 " " (s-truncate 8 (f-base file))))
-                  (direct-suffix (if tags (concat " (" tags ")") "")))
+                  (direct-suffix (if tags (propertize (concat " :" tags ":") 'face 'org-tag) "")))
               (propertize (concat title direct-suffix)
                           'org-sanpo-headline (list file id title)
                           'selectrum-candidate-display-prefix (concat prefix " "))))
