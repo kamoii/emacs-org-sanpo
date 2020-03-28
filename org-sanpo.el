@@ -265,14 +265,17 @@ returns (vector <mode> <type> <object> <file>)."
                 (_ (error "Unexpectd type: %s" (aref str 0))))
         :file (cadr x)))
 
+;; TODO: diff の検出は .org ファイルに限定してもいいかも..
 (defun org-sanpo--git-diff-index-have-cached-diff (commit)
   "If there is diff return t, otherwise return nil.
 Diff mean difference in index from commit."
   (magit-git-failure "diff-index" "--cached" "--quiet" commit))
 
+;; NOTE: git gc されちゃうと消えてしまう。root を張る方法ってあるのかな？
 (defun org-sanpo--git-create-volatile-commit-from-index (parent-commit message)
   "Create a voliatile commit object from index.
-Volatile means this commit won't be in commit graph."
+Volatile means this commit won't be in commit graph.
+Which means `git gc' will delete this commit object."
   (let* ((tree (magit-git-string "write-tree"))
          (commit (magit-git-string "commit-tree" "-p" parent-commit "-m" message tree)))
     commit))
