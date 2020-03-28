@@ -85,20 +85,21 @@
 ;; 現状自分で消す必要あり。
 (defun org-sanpo-insert-link ()
   (interactive)
-  (let* ((region (and (region-active-p) (cons (region-beginning) (region-end))))
-         (region-text (when region (buffer-substring-no-properties (car region) (cdr region))))
-         (completions (org-sanpo--get-headline-completions))
-         (select (selectrum-read "Headline: " completions :initial-input region-text))
-         (headline (get-text-property 0 'org-sanpo-headline select))
-         (new-props (unless headline (funcall org-sanpo-new-headline-props-function `(insert-link ,select))))
-         (link-desc (or region-text (and headline (nth 2 headline)) select))
-         (link-id (or (and headline (nth 1 headline)) (nth 1 new-props))))
-    ;; Remove previously selected text.
-    (when region
-      (delete-region (car region) (cdr region)))
-    (insert (org-sanpo--format-link link-id link-desc))
-    (when new-props
-      (apply 'org-sanpo--new-headline-capture new-props))))
+  (with-sanpo-directory
+   (let* ((region (and (region-active-p) (cons (region-beginning) (region-end))))
+          (region-text (when region (buffer-substring-no-properties (car region) (cdr region))))
+          (completions (org-sanpo--get-headline-completions))
+          (select (selectrum-read "Headline: " completions :initial-input region-text))
+          (headline (get-text-property 0 'org-sanpo-headline select))
+          (new-props (unless headline (funcall org-sanpo-new-headline-props-function `(insert-link ,select))))
+          (link-desc (or region-text (and headline (nth 2 headline)) select))
+          (link-id (or (and headline (nth 1 headline)) (nth 1 new-props))))
+     ;; Remove previously selected text.
+     (when region
+       (delete-region (car region) (cdr region)))
+     (insert (org-sanpo--format-link link-id link-desc))
+     (when new-props
+       (apply 'org-sanpo--new-headline-capture new-props)))))
 
 (defun org-sanpo--format-link (id desc)
   (format "[[id:%s][%s]]"
