@@ -349,8 +349,11 @@ returns (vector <mode> <type> <object> <file>)."
 ;; 際ロードすると `org-sanpo--cache-schema-version' が更新されている可能性があり、
 ;; その際は `org-sanpo--init-cache' を再度走らせる必要があるため。
 ;;
-;; plist :commit, :conn :db-file
+;; plist :conn, :db-file
 (setq org-sanpo--cache nil)
+
+(defun org-sanpo--current-commit (conn)
+  (caar (emacsql conn [:select commit :from commit])))
 
 (defun org-sanpo--init-cache ()
   "キャッシュDBに接続して `org-sanpo--cache' に設定する。
@@ -360,27 +363,26 @@ returns (vector <mode> <type> <object> <file>)."
          (user-version (caar (emacsql conn "PRAGMA user_version"))))
     (setq org-sanpo--cache
           (if (eq user-version org-sanpo--cache-schema-version)
-              (list :commit (caar (emacsql conn [:select [commit] :from commit]))
-                    :conn conn
+              (list :conn conn
                     :db-file org-sanpo-cache-db-file)
             (let ((commit (magit-rev-parse "HEAD")))
               (org-sanpo--create-cache-from-scratch conn commit)
-              (list :commit commit
-                    :conn conn
+              (list :conn conn
                     :db-file org-sanpo-cache-db-file))))))
 
 ;; 古いcommitのcacheの場合、cache を更新する
 (defun org-sanpo--get-cache ()
   "使える状態のキャッシュを返す。
-キャッシュの形式は :commit,:conn,:db-file から成る plist。
+キャッシュの形式は :conn,:db-file から成る plist。
 必要があれば初回ビルド、最新のコミットに合わせた更新がされる。"
   (unless org-sanpo--cache (org-sanpo--init-cache))
-  (let ((head-commit (magit-rev-parse "HEAD"))
-        (commit (plist-get org-sanpo--cache :commit)))
-    (unless (string= head-commit commit)
-      (org-sanpo--update-cache-to-commit (plist-get org-sanpo--cache :conn) head-commit)
-      (plist-put org-sanpo--cache :commit head-commit)))
-  (plist-get org-sanpo--cache :conn))
+  (let* ((head-commit (magit-rev-parse "HEAD"))
+         (conn (plist-get org-sanpo--cache :conn)))
+    (unless (string= head-commit (org-sanpo--current-commit conn))
+      (org-sanpo--update-cache-to-commit
+       (plist-get org-sanpo--cache :conn)
+       head-commit))
+    conn))
 
 ;; ある hash を元に
 ;; base-commit /= commit かつ commit の祖先に base-commit がいる想定
@@ -452,7 +454,7 @@ schema-version が設定される。"
     conn))
 
 ;; 更新に備えて defvar ではなくて、defconst でなければならない。
-(defconst org-sanpo--cache-schema-version 3)
+(defconst org-sanpo--cache-schema-version 1)
 ;; ids
 ;;   id, file, heading, level, position, tags?, todo_state?
 ;; refs
