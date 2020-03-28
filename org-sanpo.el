@@ -353,6 +353,8 @@ returns (vector <mode> <type> <object> <file>)."
 (setq org-sanpo--cache nil)
 
 (defun org-sanpo--current-commit (conn)
+  "cacheが構築されているコミット。
+コミットツリーに存在いないコミットの可能性がある。"
   (caar (emacsql conn [:select commit :from commit])))
 
 (defun org-sanpo--init-cache ()
@@ -400,8 +402,8 @@ returns (vector <mode> <type> <object> <file>)."
 (defun org-sanpo--update-cache-to-commit (conn commit)
   "現状効率的な実装になっていない"
   (emacsql-with-transaction conn
-    (let* ((base-commit (caar (emacsql conn [:select [commit] :from commit])))
-           (diffs (org-sanpo--git-tree-diff base-commit commit))
+    (let* ((current-commit (org-sanpo--current-commit conn))
+           (diffs (org-sanpo--git-tree-diff current-commit commit))
            (delete-files (--map (plist-get it :file) diffs))
            (insert-files (--map (plist-get it :file) (--filter (member (plist-get it :type) '(modify add)) diffs)))
            (org-files (and insert-files (org-sanpo--org-files-for-commit commit insert-files))))
