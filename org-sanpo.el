@@ -44,6 +44,8 @@
 ;; But if it does, you may want to specfiy in `.gitignore'
 (defvar org-sanpo-cache-db-file "/home/sino/org/.org-sanpo/cache.sqlite")
 
+(defvar org-sanpo-debug t)
+
 (defun org-sanpo--assert-sanpo-directory ()
   "Must be a root directory, and the repository needs at least one commit."
   (let* ((toplevel (magit-rev-parse "--show-toplevel"))
@@ -263,10 +265,17 @@ returns (vector <mode> <type> <object> <file>)."
                 (_ (error "Unexpectd type: %s" (aref str 0))))
         :file (cadr x)))
 
-;; (defun org-sanpo--git-diff-index-quiet (commit)
-;;   "If there is diff return t, otherwise return nil.
-;; Diff mean difference in index/working-tree from commit."
-;;   (magit-git-failure "diff-index" "--quiet" commit))
+(defun org-sanpo--git-diff-index-have-cached-diff (commit)
+  "If there is diff return t, otherwise return nil.
+Diff mean difference in index from commit."
+  (magit-git-failure "diff-index" "--cached" "--quiet" commit))
+
+(defun org-sanpo--git-create-volatile-commit-from-index (parent-commit message)
+  "Create a voliatile commit object from index.
+Volatile means this commit won't be in commit graph."
+  (let* ((tree (magit-git-string "write-tree"))
+         (commit (magit-git-string "commit-tree" "-p" parent-commit "-m" message tree)))
+    commit))
 
 ;; todo-keyword が取れないな？
 ;; raw-value のほうに入ってしまっているな。。。
@@ -394,8 +403,17 @@ returns (vector <mode> <type> <object> <file>)."
   (unless org-sanpo--cache (org-sanpo--init-cache))
   (let* ((head-commit (magit-rev-parse "HEAD"))
          (conn (plist-get org-sanpo--cache :conn)))
+    ;; Update head-commit if needed
     (unless (string= head-commit (org-sanpo--current-head-commit conn))
+      (when org-sanpo-debug (message "[org-sanpo] Update to head commit: %s" head-commit))
       (org-sanpo--update-cache-to-commit conn head-commit))
+    ;; Update index-commit if needed
+    (when (org-sanpo--git-diff-index-have-cached-diff (org-sanpo--current-commit conn))
+      (let ((index-commit (org-sanpo--git-create-volatile-commit-from-index
+                           (org-sanpo--current-commit conn)
+                           "volatile commit for org-sanpo")))
+        (when org-sanpo-debug (message "[org-sanpo] Update to index commit: %s" index-commit))
+        (org-sanpo--update-cache-to-commit conn index-commit t)))
     conn))
 
 ;; ある hash を元に
@@ -423,7 +441,7 @@ returns (vector <mode> <type> <object> <file>)."
       (emacsql conn
                (if is-index-commit
                    (vector :update 'commit :set `(= index-commit ,commit))
-                 (vector :update 'commit :set `(= commit ,commit) `(= index-commit ,nil)))))))
+                 (vector :update 'commit :set (vector `(= commit ,commit) `(= index-commit ,nil))))))))
 
 (defun org-sanpo--create-cache-from-scratch (conn commit)
   "初回の利用時及びscheme の更新があった際に実行される。
@@ -447,7 +465,7 @@ schema-version が設定される。"
              (headlines (plist-get x :headlines))
              (tags (plist-get x :tags))
              (links (plist-get x :links)))
-        (message "processing: %s" file)
+        (when org-sanpo-debug (message "processing: %s" file))
         (when headlines (emacsql conn (vector :insert :into 'headlines :values headlines)))
         (when tags (emacsql conn (vector :insert :into 'tags :values tags)))
         (when links (emacsql conn (vector :insert :into 'links :values links)))))))
@@ -460,11 +478,8 @@ schema-version が設定される。"
     conn))
 
 ;; 更新に備えて defvar ではなくて、defconst でなければならない。
-(defconst org-sanpo--cache-schema-version 1)
-;; ids
-;;   id, file, heading, level, position, tags?, todo_state?
-;; refs
-;;   src_id?, src_file, src_heading?, dist_id, position, context
+(defconst org-sanpo--cache-schema-version 2)
+
 (defconst org-sanpo--cache-schema
       '((headlines
          [(id text :not-null :primary-key)
