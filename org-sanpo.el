@@ -19,7 +19,7 @@
 ;; But if it does, you may want to specfiy in `.gitignore'
 (defvar org-sanpo-cache-db-file (f-full "~/org/.org-sanpo-cache.sqlite"))
 
-(defvar org-sanpo-debug t)
+(defvar org-sanpo-debug nil)
 
 (defun org-sanpo--assert-sanpo-directory ()
   "Must be a root directory, and the repository needs at least one commit."
