@@ -101,8 +101,9 @@
 
 ;; subtree に narrow されている前提で。
 ;; 見出し文字を大きくし、上下にマージンを入れる。
-;; TODO: line-height は行末が見切れている場合に効果を発揮しない
-;; TODO: 見出しが visual-line-mode で改行する際に汚ないことに
+;; TODO: 設定可能にする
+;; TODO: Maybe dim `org-drawer' face? of make font size smaller?
+;; TODO: Put the initial point on the begining of content.
 ;; NOTE: widen された時点で indirect-buffer を消して基底buffer に切り替えたほうがいいかも。
 ;; org-narrow-to-subtree 自体がそのような方法を備えているかも
 
@@ -111,12 +112,13 @@
     (goto-char (point-min))
     (let* ((level (org-current-level))
            (headline-face (intern (format "org-level-%d" level))))
-      ;; 残念ながら行末の tag も大きくなる。
-      (face-remap-add-relative headline-face :height 150))
-    (end-of-line)
-    ;; text-property は基底バッファにも影響を与える。
-    ;; そのため overlay (indirect-buffer 個別) に切り替えたほうが良い
-    (put-text-property (point) (1+ (point)) 'line-height '(2.0 2.0))))
+      ;; If you have tags at the line end, spaces between title and tags also has `org-level-' face.
+      ;; Incresings org-level face font size might make tags cut off window.
+      (face-remap-add-relative headline-face :height 140))
+    (let ((ol (make-overlay (point) (point)))) (overlay-put ol 'before-string "\n"))
+    (forward-line)
+    (let ((ol (make-overlay (point) (point)))) (overlay-put ol 'before-string "\n"))))
+
 
 (defun org-sanpo--get-or-create-headline-buffer (file id)
   "対象ファイルの indrect buffer を作成し返す。
