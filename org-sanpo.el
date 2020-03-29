@@ -9,6 +9,7 @@
 (require 's)
 (require 'emacsql)
 (require 'emacsql-sqlite)
+(require 'selectrum)
 
 ;; * 基本設定
 
