@@ -1,31 +1,5 @@
 ;; org-sanpo.el --  -*- lexical-binding: t; -*-
 ;;
-;;
-;; * 要件
-;;
-;;   * 高速で動作する
-;;   * キャッシュの存在をなるべく意識したくない
-;;   * 参照関係やキャッシュが壊れにくい設計が望ましい
-;;   * 他の org-mode の拡張との親和性を高める(refile, agenda, tags, etc)
-;;
-;; * 仕様
-;;
-;;   * ID は heading に割り当て、全文書通じて一意的である
-;;   * heading のレベルは問わない
-;;   * heading の見出しはどのような方法で変えてもいい
-;;   * ID を変えるには一貫性を保証する関数経由である必要がある(手動では変更できない)
-;;   * 参照する側は ID を持つ heading 内(及び子孫heading)からのみ許容する
-;;   * 参照元のIDとは、参照箇所から heading階層直近の ID である
-;;
-;; * git を前提としたキャッシュ戦略
-;;
-;; orgファイルが大量にある場合、全idリストの取得や全参照元の抽出は時間がかかる操作である。
-;; org-roam のキャッシュ戦略の場合、org-roam が提供する関数以外で操作した場合に壊れる。
-;; 例えばファイル名の変更、ファイルの移動するだけで壊れてしまう。
-;; roam の interface だけを通して操作する場合は問題ないが、org-mode エコシステムとの親和性が悪い。
-;; git を前提とする場合、ある commit 分まで計算した DB を作っておけば、
-;; 現状 workingspace と commit の差分を取れば 計算が必要な fileリストが取得できる。
-;;
 
 (require 'org-capture)
 ;; apply: Symbol’s function definition is void: magit-process-file
