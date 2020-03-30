@@ -5,7 +5,7 @@
 Org-sanpo is a [[https://roamresearch.com/][Roam]]-like system built on top of org-mode.
 It is heavilly inspired by and based off of [[https://github.com/jethrokuan/org-roam][org-roam]].
 
-There are three main difference:
+There are three main differences:
 
  1. Headline as Note
  2. Link by ID
