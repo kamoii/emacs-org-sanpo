@@ -200,6 +200,8 @@ Though the limitation looks like don't include white space.
 
 ;; WARN: Overwrites `org-id' settings for type "id".
 ;; Failback to `org-id-open' if current file is not under `org-sanpo-directory'??
+;; NOTE: Maybe we can specify :face property to do interest things.
+;; Like if the pointing headline is DONE state, use a sticke-through face.
 (org-link-set-parameters "id" :follow #'org-sanpo-id-open)
 
 ;; * 候補
