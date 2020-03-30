@@ -2,11 +2,13 @@
 ;;
 
 (require 'org-capture)
+(require 'org-id)
 ;; apply: Symbol’s function definition is void: magit-process-file
 ;; 上記エラーを回避するために magit-process を require
 (require 'magit-process)
 (require 'magit-git)
 (require 's)
+(require 'f)
 (require 'emacsql)
 (require 'emacsql-sqlite)
 (require 'selectrum)
@@ -185,6 +187,21 @@ Though the limitation looks like don't include white space.
 
 ;; (org-sanpo--capture "~/t/foo.org" "日本語 とかどうかな改行は ??" "hoge")
 
+;; * org-link-set-parameters
+
+(defun org-sanpo-id-open (id)
+  (with-sanpo-directory
+   (let ((headline (org-sanpo--get-headline id)))
+     (if headline
+         (let ((id (car headline))
+               (file (cadr headline)))
+           (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id)))
+       (error "No headline with id = %s" id)))))
+
+;; WARN: Overwrites `org-id' settings for type "id".
+;; Failback to `org-id-open' if current file is not under `org-sanpo-directory'??
+(org-link-set-parameters "id" :follow #'org-sanpo-id-open)
+
 ;; * 候補
 ;;
 ;; 候補は表示文字列のリストで返す。
@@ -205,6 +222,19 @@ GROUP BY h.id, h.file, h.title")))
                           'org-sanpo-headline (list file id title)
                           'selectrum-candidate-display-prefix (concat prefix " "))))
           rows)))
+
+;; * Retrieve from DB
+
+(defun org-sanpo--get-headline (id)
+  (let* ((conn (org-sanpo--get-cache))
+         (rows (emacsql conn (format "
+SELECT h.id, h.file, h.title, GROUP_CONCAT(t.tag, ':')
+FROM headlines h LEFT JOIN tags t ON h.id = t.id
+WHERE h.id = '%S'
+GROUP BY h.id, h.file, h.title" id))))
+    (pcase rows
+      (`(,v) v)
+      (_ nil))))
 
 ;; * Git関連
 
