@@ -207,8 +207,6 @@ Though the limitation looks like don't include white space."
     ;; TODO: hook的な仕組みで optout
     (org-sanpo--setup-headline-buffer)))
 
-;; (org-sanpo--capture "~/t/foo.org" "日本語 とかどうかな改行は ??" "hoge")
-
 ;; * org-link-set-parameters
 
 (defun org-sanpo-id-open (id)
