@@ -231,13 +231,14 @@ Though the limitation looks like don't include white space."
 ;; Must return non-nil if valid, otherwise return ni.
 ;; Excepts new-style link (e.g. key1=val1&key2=val2)
 (defun org-sanpo-org-protocol-handler (plist)
-  (when-let ((title (plist-get plist :title))
-             (url (plist-get plist :url)))
-    (let* ((selection (plist-get plist :selection))
-           (props (funcall org-sanpo-new-headline-props-function
-                           (list 'protocol title url selection))))
-      (apply #'org-sanpo--new-headline-capture props)
-      t)))
+  (with-sanpo-directory
+   (when-let ((title (plist-get plist :title))
+              (url (plist-get plist :url)))
+     (let* ((selection (plist-get plist :selection))
+            (props (funcall org-sanpo-new-headline-props-function
+                            (list 'protocol title url selection))))
+       (apply #'org-sanpo--new-headline-capture props)
+       t))))
 
 (add-to-list 'org-protocol-protocol-alist
              '("Org Sanpo"
