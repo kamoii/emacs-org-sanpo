@@ -2,6 +2,7 @@
 ;;
 
 (require 'org-capture)
+(require 'org-protocol)
 (require 'org-id)
 ;; apply: Symbol’s function definition is void: magit-process-file
 ;; 上記エラーを回避するために magit-process を require
@@ -9,6 +10,7 @@
 (require 'magit-git)
 (require 's)
 (require 'f)
+(require 'map)
 (require 'emacsql)
 (require 'emacsql-sqlite)
 (require 'selectrum)
@@ -153,33 +155,53 @@ org-mode は有効、対象の headline に narrow された状態にする。"
 ;; data NewContext
 ;;   = FindFile String
 ;;   | InsertLink String
+;;   | Protocol String(title) String(url) String(selection(opt))
 ;;
 (defvar org-sanpo-new-headline-props-function
   'org-sanpo--default-new-headline-props)
 
 (defun org-sanpo--default-new-headline-props (arg)
   (let ((file (format-time-string "sanpo/%Y%m%d.org"))
-        (id (org-id-new))
-        (title (pcase arg
-                 (`(find-file ,str) str)
-                 (`(insert-link ,str) str))))
-    (list file id title)))
+        (id (org-id-new)))
+    (pcase arg
+      (`(find-file ,str)
+       (list file id str))
+      (`(insert-link ,str)
+       (list file id str))
+      (`(protocol ,title ,url ,selection)
+       (let* ((meta (format "#+NAME: meta\n * source :: %s\n" url))
+              (selection (when (and selection (not (s-blank? selection)))
+                           (concat "#+BEGIN_QUOTE\n" (s-trim selection) "\n#+END_QUOTE\n")))
+              (initial-content (concat meta "\n" selection))
+              (properties `(("SOURCE" . ,url)))
+              (tags '("web")))
+         (when (s-contains? ".youtube." url) (push "video" tags))
+         (when (s-contains? "twitter.com" url) (push "tweet" tags))
+         (list file id title tags properties initial-content)))
+      (_
+       (error "Unexpected new headline context %s" arg)))))
 
-(defun org-sanpo--new-headline-capture (file id title &optional tags)
+(defun org-sanpo--new-headline-capture (file id title &optional tags properties initial-content)
   "Create heading with given `title' and `id'.
 Uses org-capture feature.
 `id' must be format that recoignesed by `org-id'.
-Though the limitation looks like don't include white space.
-"
+Though the limitation looks like don't include white space."
   (let* ((file (if (f-relative? file) (f-join org-sanpo-directory file) file))
          (target `(file ,file))
-         (template (concat "* " title "\n\n%?"))
+         (template (concat "* " title "\n\n%?" initial-content))
          (props '(:prepend t :empty-lines-after 1))
          (org-capture-entry `("_" "_" entry ,target ,template ,@props)))
     (org-capture)
     (org-entry-put nil "ID" id)
     (org-entry-put nil "CREATED_AT" (format-time-string "%s"))
-    (when tags (org-set-tags tags))
+    (pcase-dolist (`(,name . ,val) properties)
+      (org-entry-put nil name val))
+    (when tags
+      ;; `org-set-tags' assumes point is on headline,
+      ;; so we need to move to the headline first.
+      (save-excursion
+        (goto-char (point-min))
+        (org-set-tags tags)))
     ;; 何故上のほうが見切れているので recenter する
     (recenter -1)
     ;; TODO: hook的な仕組みで optout
@@ -203,6 +225,24 @@ Though the limitation looks like don't include white space.
 ;; NOTE: Maybe we can specify :face property to do interest things.
 ;; Like if the pointing headline is DONE state, use a sticke-through face.
 (org-link-set-parameters "id" :follow #'org-sanpo-id-open)
+
+;; * org-protocol support
+
+;; Must return non-nil if valid, otherwise return ni.
+;; Excepts new-style link (e.g. key1=val1&key2=val2)
+(defun org-sanpo-org-protocol-handler (plist)
+  (when-let ((title (plist-get plist :title))
+             (url (plist-get plist :url)))
+    (let* ((selection (plist-get plist :selection))
+           (props (funcall org-sanpo-new-headline-props-function
+                           (list 'protocol title url selection))))
+      (apply #'org-sanpo--new-headline-capture props)
+      t)))
+
+(add-to-list 'org-protocol-protocol-alist
+             '("Org Sanpo"
+               :protocol "sanpo"
+               :function org-sanpo-org-protocol-handler))
 
 ;; * 候補
 ;;
