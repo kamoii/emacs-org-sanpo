@@ -18,7 +18,10 @@
 ;; * 基本設定
 
 ;; Must be root of git repository too.
-(defvar org-sanpo-directory (f-full "~/org/"))
+(defvar org-sanpo-directory "~/org/")
+
+(defun org-sanpo-directory ()
+  (f-full org-sanpo-directory))
 
 (defconst org-sanpo--cache-db-filename ".org-sanpo-cache.sqlite")
 
@@ -38,7 +41,7 @@
     t))
 
 (defmacro with-sanpo-directory (&rest form)
-  `(let ((default-directory org-sanpo-directory))
+  `(let ((default-directory (org-sanpo-directory)))
      (org-sanpo--assert-sanpo-directory)
      ,@form))
 
@@ -188,7 +191,7 @@ org-mode は有効、対象の headline に narrow された状態にする。"
 Uses org-capture feature.
 `id' must be format that recoignesed by `org-id'.
 Though the limitation looks like don't include white space."
-  (let* ((file (if (f-relative? file) (f-join org-sanpo-directory file) file))
+  (let* ((file (if (f-relative? file) (f-join (org-sanpo-directory) file) file))
          (target `(file ,file))
          (template (concat "* " title "\n\n" initial-content "%?"))
          (props '(:prepend t :empty-lines-after 1))
