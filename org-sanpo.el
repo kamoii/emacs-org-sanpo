@@ -19,9 +19,11 @@
 
 ;; Must be root of git repository too.
 (defvar org-sanpo-directory (f-full "~/org/"))
-;; The cache directory deosn't need to be under `org-sanpo-directory'.
-;; But if it does, you may want to specfiy in `.gitignore'
-(defvar org-sanpo-cache-db-file (f-full "~/org/.org-sanpo-cache.sqlite"))
+
+(defconst org-sanpo--cache-db-filename ".org-sanpo-cache.sqlite")
+
+(defun org-sanpo-cache-db-file ()
+  (f-full (f-join org-sanpo-directory org-sanpo--cache-db-filename)))
 
 (defvar org-sanpo-debug nil)
 
@@ -430,16 +432,17 @@ Which means `git gc' will delete this commit object."
   "キャッシュDBに接続して `org-sanpo--cache' に設定する。
 初回(もしくは schema versionが変わった場合)は HEADコミットからキャッシュを
 ビルドするため時間がかかる。既にキャッシュDBが存在する場合更新は行なわない。"
-  (let* ((conn (org-sanpo--db-connect-or-create org-sanpo-cache-db-file))
+  (let* ((db-file (org-sanpo-cache-db-file))
+         (conn (org-sanpo--db-connect-or-create db-file))
          (user-version (caar (emacsql conn "PRAGMA user_version"))))
     (setq org-sanpo--cache
           (if (eq user-version org-sanpo--cache-schema-version)
               (list :conn conn
-                    :db-file org-sanpo-cache-db-file)
+                    :db-file db-file)
             (let ((commit (magit-rev-parse "HEAD")))
               (org-sanpo--create-cache-from-scratch conn commit)
               (list :conn conn
-                    :db-file org-sanpo-cache-db-file))))))
+                    :db-file db-file))))))
 
 (defun org-sanpo--get-cache ()
   "使える状態のキャッシュを返す。
