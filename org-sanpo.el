@@ -190,7 +190,7 @@ Uses org-capture feature.
 Though the limitation looks like don't include white space."
   (let* ((file (if (f-relative? file) (f-join org-sanpo-directory file) file))
          (target `(file ,file))
-         (template (concat "* " title "\n\n%?" initial-content))
+         (template (concat "* " title "\n\n" initial-content "%?"))
          (props '(:prepend t :empty-lines-after 1))
          (org-capture-entry `("_" "_" entry ,target ,template ,@props)))
     (org-capture)
