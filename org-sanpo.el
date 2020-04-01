@@ -333,13 +333,6 @@ Which means `git gc' will delete this commit object."
          (commit (magit-git-string "commit-tree" "-p" parent-commit "-m" message tree)))
     commit))
 
-;; todo-keyword が取れないな？
-;; raw-value のほうに入ってしまっているな。。。
-;; https://emacs.stackexchange.com/questions/35042/parsing-an-orgmode-file-with-org-element-parse-buffer
-;; (org-mode) が必要ってことね
-
-;; (["hoge" "foo.org" "maybe english works better" 1 1 203 ("foo") "TODO"])
-
 ;; * Orgファイルから情報抽出
 
 (defun org-sanpo--extract-from-file (file &optional object-hash)
@@ -349,6 +342,9 @@ Which means `git gc' will delete this commit object."
       (insert-file-contents file))
     (let ((org-startup-with-latex-preview nil)
           (org-startup-with-inline-images nil))
+      ;; To extract todo-keyword we need to enable `org-mode'
+      ;; ref: https://emacs.stackexchange.com/questions/35042/parsing-an-orgmode-file-with-org-element-parse-buffer
+      ;; NOTE: Feels there is more efficient way.
       (org-mode))
     (org-sanpo--extract file)))
 
