@@ -34,7 +34,10 @@ To update cache properly, *org-sanpo-directory* must be a root directory of a gi
  * s, f, map -- Utils
  * magit -- To access git repo
  * emacsql/emacsql-sqlite -- To access sqlite3 database
- * selectrum -- For interactive selecting
+ * [[https://github.com/raxod502/selectrum][selectrum]] -- For interactive selecting
    - Currently its not uploaded to MELPA
 
 * TODO Related libraries
+
+ * [[https://github.com/jethrokuan/org-roam][jethrokuan/org-roam: Rudimentary Roam replica with Org-mode]]
+ * [[https://github.com/l3kn/org-zettelkasten][l3kn/org-zettelkasten: An opinionated setup for managing large collections of interlinked org files.]]
