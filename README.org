@@ -26,8 +26,31 @@ To update cache properly, *org-sanpo-directory* must be a root directory of a gi
 (define-key org-mode-map       (kbd "C-c n i") 'org-sanpo-insert-link)
 #+end_src
 
+* TODO How to use
+
+*TODO*
+
 * TODO Headline as Note, Link by ID
+
+*TODO*
+
 * TODO Utilize Git for Cache
+
+*TODO*
+
+* TODO Org-protocol Support
+
+*TODO*
+
+* Features to be implemented
+
+Might change.
+
+ * [X] Org-protocol support
+ * [ ] Daily notes command
+ * [ ] Backlink buffer
+ * [ ] Relation graph
+
 * Dependencies
 
  * org, org-capture, org-protocol, org-id -- Org features
