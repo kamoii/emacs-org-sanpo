@@ -30,11 +30,11 @@ To update cache properly, *org-sanpo-directory* must be a root directory of a gi
 * TODO Utilize Git for Cache
 * Dependencies
 
- * org, org-capture, org-protocol, org-id :: Org features
- * s, f, map :: Utils
- * magit :: To access git repo
- * emacsql/emacsql-sqlite :: Used to access sqlite3 database
- * selectrum :: For interactive selecting
+ * org, org-capture, org-protocol, org-id -- Org features
+ * s, f, map -- Utils
+ * magit -- To access git repo
+ * emacsql/emacsql-sqlite -- To access sqlite3 database
+ * selectrum -- For interactive selecting
    - Currently its not uploaded to MELPA
 
 * TODO Related libraries
