@@ -13,6 +13,8 @@ There are three main differences:
 
 * Configuration
 
+To update cache properly, *org-sanpo-directory* must be a root directory of a git repository.
+
 #+begin_src elisp
 (require 'org-sanpo)
 ;; Root directory for your org files. It also must be a git repository root.
@@ -23,3 +25,16 @@ There are three main differences:
 (define-key org-sanpo-mode-map (kbd "C-c n f") 'org-sanpo-find-file)
 (define-key org-mode-map       (kbd "C-c n i") 'org-sanpo-insert-link)
 #+end_src
+
+* TODO Headline as Note, Link by ID
+* TODO Utilize Git for Cache
+* Dependencies
+
+ * org, org-capture, org-protocol, org-id :: Org features
+ * s, f, map :: Utils
+ * magit :: To access git repo
+ * emacsql/emacsql-sqlite :: Used to access sqlite3 database
+ * selectrum :: For interactive selecting
+   - Currently its not uploaded to MELPA
+
+* TODO Related libraries
