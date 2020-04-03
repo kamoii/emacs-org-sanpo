@@ -45,6 +45,28 @@
      (org-sanpo--assert-sanpo-directory)
      ,@form))
 
+;; * org-sanpo-mode
+
+(defvar org-sanpo-mode-map (make-sparse-keymap))
+
+(define-minor-mode org-sanpo-mode
+  "Minor mode for Org-sanpo."
+  :global t
+  :keymap org-sanpo-mode-map
+  (with-sanpo-directory
+   (cond
+    (org-sanpo-mode
+     (org-sanpo--init-cache)
+     ;; WARN: Overwrites `org-id' settings for type "id".
+     ;; NOTE: Maybe we can specify :face property to do interest things.
+     ;; Like if the pointing headline is DONE state, use a sticke-through face.
+     (org-link-set-parameters "id" :follow #'org-sanpo-id-open))
+    (t
+     (org-sanpo--close-cache)
+     ;; id について既に独自設定されている可能性がある。
+     ;; そのため上書き前の設定を保持しておいて元に戻すほうがいいかな。
+     (org-link-set-parameters "id" :follow #'org-id-open)))))
+
 ;; * find-file/insert-link コマンド
 ;;
 ;; 基本的に org-roam が提供する関数と同等のものを提供する。
@@ -214,6 +236,7 @@ Though the limitation looks like don't include white space."
 
 ;; * org-link-set-parameters
 
+;; TODO: Failback to `org-id-open' if current file is not under `org-sanpo-directory'??
 (defun org-sanpo-id-open (id)
   (with-sanpo-directory
    (let ((headline (org-sanpo--get-headline id)))
@@ -222,12 +245,6 @@ Though the limitation looks like don't include white space."
                (file (cadr headline)))
            (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id)))
        (error "No headline with id = %s" id)))))
-
-;; WARN: Overwrites `org-id' settings for type "id".
-;; Failback to `org-id-open' if current file is not under `org-sanpo-directory'??
-;; NOTE: Maybe we can specify :face property to do interest things.
-;; Like if the pointing headline is DONE state, use a sticke-through face.
-(org-link-set-parameters "id" :follow #'org-sanpo-id-open)
 
 ;; * org-protocol support
 
@@ -443,6 +460,12 @@ Which means `git gc' will delete this commit object."
               (list :conn conn
                     :db-file db-file))))))
 
+(defun org-sanpo--close-cache ()
+  (when org-sanpo--cache
+    (let ((conn (plist-get org-sanpo--cache :conn)))
+      (emacsql-close conn)
+      (setq org-sanpo--cache nil))))
+
 (defun org-sanpo--get-cache ()
   "使える状態のキャッシュを返す。
 キャッシュの形式は :conn,:db-file から成る plist。
@@ -522,7 +545,7 @@ schema-version が設定される。"
     conn))
 
 ;; 更新に備えて defvar ではなくて、defconst でなければならない。
-(defconst org-sanpo--cache-schema-version 2)
+(defconst org-sanpo--cache-schema-version 1)
 
 (defconst org-sanpo--cache-schema
       '((headlines
