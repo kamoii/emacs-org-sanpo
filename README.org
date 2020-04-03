@@ -10,3 +10,16 @@ There are three main differences:
  1. Headline as Note
  2. Link by ID
  3. Utilize Git for Cache
+
+* Configuration
+
+#+begin_src elisp
+(require 'org-sanpo)
+;; Root directory for your org files. It also must be a git repository root.
+(setq org-sanpo-directory "~/org/")
+;; The first time called cache will be created from scratch. It may take some time.
+(org-sanpo-mode)
+;; Define some bindings.
+(define-key org-sanpo-mode-map (kbd "C-c n f") 'org-sanpo-find-file)
+(define-key org-mode-map       (kbd "C-c n i") 'org-sanpo-insert-link)
+#+end_src
