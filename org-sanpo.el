@@ -131,25 +131,7 @@
 ;; * 既存 headline に narrow された buffer の取得
 
 ;; subtree に narrow されている前提で。
-;; 見出し文字を大きくし、上下にマージンを入れる。
-;; TODO: 設定可能にする
-;; TODO: Maybe dim `org-drawer' face? of make font size smaller?
-;; TODO: Put the initial point on the begining of content.
-;; NOTE: widen された時点で indirect-buffer を消して基底buffer に切り替えたほうがいいかも。
-;; org-narrow-to-subtree 自体がそのような方法を備えているかも
-
-(defun org-sanpo--setup-headline-buffer ()
-  (save-excursion
-    (goto-char (point-min))
-    (let* ((level (org-current-level))
-           (headline-face (intern (format "org-level-%d" level))))
-      ;; If you have tags at the line end, spaces between title and tags also has `org-level-' face.
-      ;; Incresings org-level face font size might make tags cut off window.
-      (face-remap-add-relative headline-face :height 140))
-    (let ((ol (make-overlay (point) (point)))) (overlay-put ol 'before-string "\n"))
-    (forward-line)
-    (let ((ol (make-overlay (point) (point)))) (overlay-put ol 'before-string "\n"))))
-
+(defvar org-sanpo--setup-headline-buffer-function nil)
 
 (defun org-sanpo--get-or-create-headline-buffer (file id)
   "対象ファイルの indrect buffer を作成し返す。
@@ -170,8 +152,8 @@ org-mode は有効、対象の headline に narrow された状態にする。"
           (org-narrow-to-subtree)
           ;; TODO: point が headline の開始位置より内容の先頭(affliated-content?)にあるほうが便利かな
           (org-show-subtree)
-          ;; TODO: hook的な仕組みで optout
-          (org-sanpo--setup-headline-buffer))
+          (when (functionp org-sanpo--setup-headline-buffer-function)
+            (funcall org-sanpo--setup-headline-buffer-function)))
         buffer))))
 
 ;; * 新規 headline を作成 (org-capture を利用)
@@ -231,8 +213,8 @@ Though the limitation looks like don't include white space."
         (org-set-tags tags)))
     ;; 何故上のほうが見切れているので recenter する
     (recenter -1)
-    ;; TODO: hook的な仕組みで optout
-    (org-sanpo--setup-headline-buffer)))
+    (when (functionp org-sanpo--setup-headline-buffer-function)
+      (funcall org-sanpo--setup-headline-buffer-function))))
 
 ;; * org-link-set-parameters
 
