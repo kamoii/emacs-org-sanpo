@@ -123,6 +123,11 @@
   (interactive)
   (org-sanpo-daily (current-time)))
 
+(defun org-sanpo-yesterday ()
+  "Open yesterday's daily note."
+  (interactive)
+  (org-sanpo-daily (time-add -86400 (current-time))))
+
 ;; TODO: Make auto-save/auto-staging behaviour optional
 (defun org-sanpo-daily (time)
   "Open daily headline that includes time.
