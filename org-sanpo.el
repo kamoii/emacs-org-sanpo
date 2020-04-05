@@ -112,21 +112,47 @@
           id
           (s-replace-all '(("[" . "［") ("]" . "］")) desc)))
 
-;; * TODO daily コマンド
-;;
-;; 日毎のノートは、特別な ID を持つ
-;; この ID の生成法が変わると、それ以前に付与された daily note が daily note ではないと
-;; 判断されてしまう。なので `org-sanpo-daily-20200325' のような形式を一度定めてしまったら
-;; 変えれない...
-;; それとも SANPO_TYPE: daily のような headline property を持たせるか...
-;;
-;; キャッシュ更新の問題にも気を付ける必要あり
-;; キャッシュが更新されないまま二回 org-sanpo-daily を実行してしまうと二個作られる
-;; -> org-capture って captureバッファを出した時点で
-;;
-;; roam ではどのように解決しているのか？
-;; 特定のファイルパスで作成している。
-;; これだけは roam のほうがマシかな。
+;; * daily コマンド
+
+(defun org-sanpo--daily-id (time)
+  "Fixed format ID for daily headlines."
+  (format-time-string "SANPO-DAILY-%Y%m%d" time))
+
+(defun org-sanpo-today ()
+  "Open today's daily note."
+  (interactive)
+  (org-sanpo-daily (current-time)))
+
+;; TODO: Make auto-save/auto-staging behaviour optional
+(defun org-sanpo-daily (time)
+  "Open daily headline that includes time.
+It tries extra hard to not create duplicated headlines.
+Also it auto-save/auto-staging to prevent future duplication."
+  (interactive)
+  (with-sanpo-directory
+   (let* ((id (org-sanpo--daily-id time))
+          (file (format-time-string "sanpo/%Y%m%d.org" time))
+          (title (format-time-string "%Y/%m/%d(%a)" time))
+          (file-buffer (find-file-noselect file))
+          (headline (org-sanpo--get-headline id)))
+     (cond (headline
+            (let ((file (cadr headline)))
+              (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id))))
+           ((and file-buffer (with-current-buffer file-buffer (org-find-entry-with-id id)))
+            ;; While the file doesn't exist on disk,
+            ;; there might be a file visiting buffer which includes target id.
+            ;; This could happen when you revert new created file with git.
+            ;; Save + Staging first
+            (with-current-buffer file-buffer (save-buffer))
+            (unless (magit-git-success "add" file) (error "Failed staging file"))
+            (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id)))
+           (t
+            (let ((org-sanpo--setup-headline-buffer-function nil))
+              (org-sanpo--new-headline-capture file id title '("daily")))
+            (org-capture-finalize)
+            ;; Add to staging immediatly to prevent duplication
+            (unless (magit-git-success "add" file) (error "Failed staging file"))
+            (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id)))))))
 
 ;; * 既存 headline に narrow された buffer の取得
 
