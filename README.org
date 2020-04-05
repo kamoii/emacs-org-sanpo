@@ -23,6 +23,7 @@ To update cache properly, *org-sanpo-directory* must be a root directory of a gi
 (org-sanpo-mode)
 ;; Define some bindings.
 (define-key org-sanpo-mode-map (kbd "C-c n f") 'org-sanpo-find-file)
+(define-key org-sanpo-mode-map (kbd "C-c n t") 'org-sanpo-today)
 (define-key org-mode-map       (kbd "C-c n i") 'org-sanpo-insert-link)
 #+end_src
 
