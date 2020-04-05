@@ -48,7 +48,7 @@ To update cache properly, *org-sanpo-directory* must be a root directory of a gi
 Might change.
 
  * [X] Org-protocol support
- * [ ] Daily notes command
+ * [X] Daily headline command
  * [ ] Backlink buffer
  * [ ] Relation graph
 
