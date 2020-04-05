@@ -135,24 +135,25 @@ Also it auto-save/auto-staging to prevent future duplication."
           (title (format-time-string "%Y/%m/%d(%a)" time))
           (file-buffer (find-file-noselect file))
           (headline (org-sanpo--get-headline id)))
-     (cond (headline
-            (let ((file (cadr headline)))
-              (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id))))
-           ((and file-buffer (with-current-buffer file-buffer (org-find-entry-with-id id)))
-            ;; While the file doesn't exist on disk,
-            ;; there might be a file visiting buffer which includes target id.
-            ;; This could happen when you revert new created file with git.
-            ;; Save + Staging first
-            (with-current-buffer file-buffer (save-buffer))
-            (unless (magit-git-success "add" file) (error "Failed staging file"))
-            (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id)))
-           (t
-            (let ((org-sanpo--setup-headline-buffer-function nil))
-              (org-sanpo--new-headline-capture file id title '("daily")))
-            (org-capture-finalize)
-            ;; Add to staging immediatly to prevent duplication
-            (unless (magit-git-success "add" file) (error "Failed staging file"))
-            (pop-to-buffer (org-sanpo--get-or-create-headline-buffer file id)))))))
+     (pop-to-buffer-same-window
+      (cond (headline
+             (let ((file (cadr headline)))
+               (org-sanpo--get-or-create-headline-buffer file id)))
+            ((and file-buffer (with-current-buffer file-buffer (org-find-entry-with-id id)))
+             ;; While the file doesn't exist on disk,
+             ;; there might be a file visiting buffer which includes target id.
+             ;; This could happen when you revert new created file with git.
+             ;; Save + Staging first
+             (with-current-buffer file-buffer (save-buffer))
+             (unless (magit-git-success "add" file) (error "Failed staging file"))
+             (org-sanpo--get-or-create-headline-buffer file id))
+            (t
+             (let ((org-sanpo--setup-headline-buffer-function nil))
+               (org-sanpo--new-headline-capture file id title '("daily")))
+             (org-capture-finalize)
+             ;; Add to staging immediatly to prevent duplication
+             (unless (magit-git-success "add" file) (error "Failed staging file"))
+             (org-sanpo--get-or-create-headline-buffer file id)))))))
 
 ;; * 既存 headline に narrow された buffer の取得
 
