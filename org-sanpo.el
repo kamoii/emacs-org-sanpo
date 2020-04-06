@@ -289,12 +289,12 @@ Though the limitation looks like don't include white space."
 (defun org-sanpo--get-headline-completions ()
   (let* ((conn (org-sanpo--get-cache))
          (rows (emacsql conn "
-SELECT h.id, h.file, h.title, GROUP_CONCAT(t.tag, ':')
+SELECT h.id, h.file, h.title, '(' || GROUP_CONCAT(t.tag, ' ') || ')'
 FROM headlines h LEFT JOIN tags t ON h.id = t.id
 GROUP BY h.id, h.file, h.title")))
     (-map (pcase-lambda (`(,id ,file ,title ,tags))
             (let ((prefix (s-pad-right 8 " " (s-truncate 8 (f-base file))))
-                  (direct-suffix (if tags (propertize (concat " :" tags ":") 'face 'org-tag) "")))
+                  (direct-suffix (if tags (propertize (concat " :" (s-join ":" tags) ":") 'face 'org-tag) "")))
               (propertize (concat title direct-suffix)
                           'org-sanpo-headline (list file id title)
                           'selectrum-candidate-display-prefix (concat prefix " "))))
@@ -305,7 +305,7 @@ GROUP BY h.id, h.file, h.title")))
 (defun org-sanpo--get-headline (id)
   (let* ((conn (org-sanpo--get-cache))
          (rows (emacsql conn (format "
-SELECT h.id, h.file, h.title, GROUP_CONCAT(t.tag, ':')
+SELECT h.id, h.file, h.title, '(' || GROUP_CONCAT(t.tag, ' ') || ')'
 FROM headlines h LEFT JOIN tags t ON h.id = t.id
 WHERE h.id = '%S'
 GROUP BY h.id, h.file, h.title" id))))
