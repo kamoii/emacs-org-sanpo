@@ -180,6 +180,7 @@ org-mode は有効、対象の headline に narrow された状態にする。"
           ;; NOTE: キャッシュDBには headline の開始位置(begin)を持っているが、
           ;; 対象ファイルを編集中(未保存)の場合は開始位置がキャッシュとズレている可能性があるため
           ;; file 内 id 検索を用いる。
+          ;; TODO: Its not guaranteed that file has id headline. Need to handle such case.
           (goto-char (org-find-entry-with-id id))
           (org-narrow-to-subtree)
           ;; TODO: point が headline の開始位置より内容の先頭(affliated-content?)にあるほうが便利かな
