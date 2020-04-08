@@ -59,7 +59,6 @@ Might change.
  * magit -- To access git repo
  * emacsql/emacsql-sqlite -- To access sqlite3 database
  * [[https://github.com/raxod502/selectrum][selectrum]] -- For interactive selecting
-   - Currently its not uploaded to MELPA
 
 * TODO Related libraries
 
