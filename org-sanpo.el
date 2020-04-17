@@ -294,12 +294,12 @@ SELECT h.id, h.file, h.title, h.todo_keyword, '(' || GROUP_CONCAT(t.tag, ' ') ||
 FROM headlines h LEFT JOIN tags t ON h.id = t.id
 GROUP BY h.id, h.file, h.title, h.todo_keyword")))
     (-map (pcase-lambda (`(,id ,file ,title ,todo-keyword ,tags))
-            (let ((prefix (s-pad-right 8 " " (s-truncate 8 (f-base file))))
+            (let ((right (propertize file 'face 'font-lock-comment-face))
                   (direct-prefix (when todo-keyword (concat (propertize todo-keyword 'face (org-get-todo-face todo-keyword)) " ")))
                   (direct-suffix (when tags (propertize (concat " :" (s-join ":" tags) ":") 'face 'org-tag))))
               (propertize (concat direct-prefix title direct-suffix)
                           'org-sanpo-headline (list file id title)
-                          'selectrum-candidate-display-prefix (concat prefix "  "))))
+                          'selectrum-candidate-display-right-margin right )))
           rows)))
 
 ;; * Retrieve from DB
