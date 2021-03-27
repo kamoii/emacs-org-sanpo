@@ -77,7 +77,7 @@
   (with-sanpo-directory
    (let* ((completions (org-sanpo--get-headline-completions))
           ;; (title (completing-read "Headlines: " completions))
-          (str (selectrum-read "Headline: " completions))
+          (str (completing-read "Headline: " completions))
           (headline (get-text-property 0 'org-sanpo-headline str)))
      (if headline
          (pcase-let ((`(,file ,id _) headline))
@@ -95,7 +95,7 @@
    (let* ((region (and (region-active-p) (cons (region-beginning) (region-end))))
           (region-text (when region (buffer-substring-no-properties (car region) (cdr region))))
           (completions (org-sanpo--get-headline-completions))
-          (select (selectrum-read "Headline: " completions :initial-input region-text))
+          (select (completing-read "Headline: " completions nil nil region-text))
           (headline (get-text-property 0 'org-sanpo-headline select))
           (new-props (unless headline (funcall org-sanpo-new-headline-props-function `(insert-link ,select))))
           (link-desc (or region-text (and headline (nth 2 headline)) select))
