@@ -13,7 +13,6 @@
 (require 'map)
 (require 'emacsql)
 (require 'emacsql-sqlite)
-(require 'selectrum)
 
 ;; * 基本設定
 
