@@ -77,7 +77,7 @@
    (let* ((completions (org-sanpo--get-headline-completions))
           ;; (title (completing-read "Headlines: " completions))
           (str0 (completing-read "Headline: " completions))
-          (str (-find (lambda (x) (equal x str0)) completions))
+          (str (or (-find (lambda (x) (equal x str0)) completions) str0))
           (headline (get-text-property 0 'org-sanpo-headline str)))
      (if headline
          (pcase-let ((`(,file ,id _) headline))
