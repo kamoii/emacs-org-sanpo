@@ -96,7 +96,7 @@
           (region-text (when region (buffer-substring-no-properties (car region) (cdr region))))
           (completions (org-sanpo--get-headline-completions))
           (select0 (completing-read "Headline: " completions nil nil region-text))
-          (select (-find (lambda (x) (equal x select0)) completions))
+          (select (or (-find (lambda (x) (equal x select0)) completions) select0))
           (headline (get-text-property 0 'org-sanpo-headline select))
           (new-props (unless headline (funcall org-sanpo-new-headline-props-function `(insert-link ,select))))
           (link-desc (or region-text (and headline (nth 2 headline)) select))
