@@ -555,7 +555,7 @@ schema-version が設定される。"
         (when links (emacsql conn (vector :insert :into 'links :values links)))))))
 
 (defun org-sanpo--db-connect-or-create (db-file)
-  (let ((conn (emacsql-sqlite db-file)))
+  (let ((conn (emacsql-sqlite-open db-file)))
     (emacsql conn "PRAGMA foreign_keys = ON")
     (unless (equal '((1)) (emacsql conn "PRAGMA foreign_keys"))
       (error "This SQlite version doesn't support foreign_keys"))
